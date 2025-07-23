@@ -27,7 +27,6 @@ import java.util.concurrent.Executors
 class VideoManager(private val context: AppCompatActivity) {
     private val REQUIRED_PERMISSIONS = arrayOf(Manifest.permission.CAMERA)
     private var cameraExecutor: ExecutorService = Executors.newSingleThreadExecutor()
-    private var isCameraBound = false
 
     var onFrameAnalyzed: (String) -> Unit = {  }
     var size = Size(96, 96)
@@ -46,7 +45,6 @@ class VideoManager(private val context: AppCompatActivity) {
         )
 
     fun bindingCamera(viewFinder: PreviewView) {
-        if (isCameraBound) return
         val processCameraProvider = ProcessCameraProvider.getInstance(context)
         processCameraProvider.addListener({
             val cameraProvider = processCameraProvider.get()
@@ -65,7 +63,6 @@ class VideoManager(private val context: AppCompatActivity) {
             try {
                 cameraProvider.unbindAll()
                 cameraProvider.bindToLifecycle(context, cameraSelector, preview, imageAnalyzer)
-                isCameraBound = true
             } catch (_: Exception) {}
         }, ContextCompat.getMainExecutor(context))
     }
