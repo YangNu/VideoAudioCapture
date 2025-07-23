@@ -3,6 +3,7 @@ package com.yangnu.videoaudiocapture
 import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.util.Base64
+import android.util.Log
 import android.util.Size
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -12,8 +13,12 @@ import com.yangnu.videoaudiocapture.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
+
     private lateinit var videoManager: VideoManager
+    private lateinit var audioManager: AudioManager
+
     private val REQUEST_CODE_CAMERA_PERMISSIONS = 10
+    private val REQUEST_CODE_RECORD_PERMISSIONS = 1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,11 +37,19 @@ class MainActivity : AppCompatActivity() {
             onFrameAnalyzed = ::onFrameAnalyzed
         }
 
-        if (videoManager.allPermissionsGranted()) {
-            videoManager.bindingCamera(binding.viewFinder)
-        } else {
-            videoManager.requestPermission(REQUEST_CODE_CAMERA_PERMISSIONS)
+        audioManager = AudioManager(this).apply {
+            onAudioCaptured = ::onAudioCaptured
         }
+
+        if (videoManager.allPermissionsGranted())
+            videoManager.bindingCamera(binding.viewFinder)
+        else
+            videoManager.requestPermission(REQUEST_CODE_CAMERA_PERMISSIONS)
+
+        if (audioManager.allPermissionsGranted())
+            audioManager.capturingAudio()
+        else
+            audioManager.requestPermission(REQUEST_CODE_RECORD_PERMISSIONS)
     }
 
     override fun onRequestPermissionsResult(
@@ -46,6 +59,15 @@ class MainActivity : AppCompatActivity() {
         if (requestCode == REQUEST_CODE_CAMERA_PERMISSIONS)
             if (videoManager.allPermissionsGranted())
                 videoManager.bindingCamera(binding.viewFinder)
+
+        if (requestCode == REQUEST_CODE_RECORD_PERMISSIONS)
+            if (audioManager.allPermissionsGranted())
+                audioManager.capturingAudio()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        audioManager.release()
     }
 
     private fun onFrameAnalyzed(base64: String) {
@@ -54,5 +76,9 @@ class MainActivity : AppCompatActivity() {
             val bitmap = BitmapFactory.decodeByteArray(decodedByte, 0, decodedByte.size)
             binding.preview.setImageBitmap(bitmap)
         }
+    }
+
+    private fun onAudioCaptured(base64: String) {
+        Log.d("@@@", "${base64.length}\t"+base64.take(100))
     }
 }
