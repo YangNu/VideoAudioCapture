@@ -40,6 +40,8 @@ android {
 }
 
 dependencies {
+    implementation(libs.androidx.camera.view)
+    implementation(libs.androidx.camera.lifecycle)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
